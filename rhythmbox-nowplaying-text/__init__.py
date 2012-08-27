@@ -20,17 +20,20 @@
 # writes to fifo instead of file.
 
 import os
-import rb
-import rhythmdb
+from gi.repository import GObject, RB, Peas
 
-class NowPlayingTextPlugin (rb.Plugin):
+class NowPlayingTextPlugin (GObject.Object, Peas.Activatable):
+
+  object = GObject.property(type=GObject.Object)
+
   def __init__(self):
-    rb.Plugin.__init__(self)
+    super(NowPlayingTextPlugin, self).__init__()
 
   # What to do on activation
-  def activate(self, shell):
-    self.shell = shell
-    self.db = shell.props.db
+  def do_activate(self):
+    print "NowPlayingTextPlugin activated"
+    self.shell = self.object
+    self.db = self.shell.props.db
     self.current_entry = None
     self.output_file = os.path.expanduser('~') + "/.rhythmbox.out"
 
@@ -39,7 +42,7 @@ class NowPlayingTextPlugin (rb.Plugin):
     os.close(file)
 
     # Reference the shell player
-    sp = shell.props.shell_player
+    sp = self.shell.props.shell_player
 
     # bind to "playing-changed" signal
     self.pc_id = sp.connect(
@@ -63,9 +66,10 @@ class NowPlayingTextPlugin (rb.Plugin):
     if sp.get_playing(): self.set_entry(sp.get_playing_entry())
   
   # What to do on deactivation
-  def deactivate(self, shell):    
+  def do_deactivate(self): 
+    print "NowPlayingTextPlugin deactivated"
     # Disconnect signals
-    sp = shell.props.shell_player
+    sp = self.shell.props.shell_player
     sp.disconnect(self.psc_id)
     sp.disconnect(self.pc_id)
     sp.disconnect(self.pspc_id)
@@ -107,19 +111,15 @@ class NowPlayingTextPlugin (rb.Plugin):
   def get_songinfo_from_entry(self):
     # Set properties list
     properties = {
-      "title":rhythmdb.PROP_TITLE,
-      "genre":rhythmdb.PROP_GENRE,
-      "artist":rhythmdb.PROP_ARTIST,
-      "album":rhythmdb.PROP_ALBUM,
-      "track-number":rhythmdb.PROP_TRACK_NUMBER,
-      "duration":rhythmdb.PROP_DURATION,
-      "bitrate":rhythmdb.PROP_BITRATE,
-	  "rating":rhythmdb.PROP_RATING
+      "title":RB.RhythmDBPropType.TITLE,
+      "genre":RB.RhythmDBPropType.GENRE,
+      "artist":RB.RhythmDBPropType.ARTIST,
+      "album":RB.RhythmDBPropType.ALBUM
     }
 
     # Get song info from the current rhythmdb entry
     properties = dict(
-      (k, self.db.entry_get(self.current_entry, v))
+      (k, self.current_entry.get_string(v))
       for k, v in properties.items()
     )
     
@@ -128,7 +128,8 @@ class NowPlayingTextPlugin (rb.Plugin):
     
   # Write songinfo to text file
   def write_from_songinfo(self, properties):
-    output = properties['artist'] + " - " + properties['title'] + " (" + `properties['rating']`.split('.')[0] + ")"
+    output = properties['artist'] + " - " + properties['title'] 
+    print output
     maxlength = 50
     
     # Write to file
