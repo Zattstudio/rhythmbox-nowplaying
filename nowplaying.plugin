@@ -1,0 +1,8 @@
+[Plugin]
+Loader=python3
+Module=rhythmbox-nowplaying
+IAge=2
+Name=Now Playing
+Description=Creates a text document that stores current song information (defaults to: "~/.rhythmbox-current.out")
+Authors=Jon Sagotsky
+Copyright=Copyright © 2011 Jon Sagotsky
