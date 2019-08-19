@@ -1,5 +1,5 @@
 [Plugin]
-Loader=python
+Loader=python3
 Module=rhythmbox-nowplaying-text
 IAge=2
 Name=Now Playing text
